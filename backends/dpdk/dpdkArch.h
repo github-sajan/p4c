@@ -73,7 +73,7 @@ class ConvertToDpdkArch : public Transform {
 // will become m.$(struct_name)_$(field_name).
 class CollectMetadataHeaderInfo : public Inspector {
     DpdkProgramStructure *structure;
-
+    //safe_vector<unsigned int> field_size_list;
     void pushMetadata(const IR::Parameter *p);
     void pushMetadata(const IR::ParameterList*, std::list<int> indices);
 
@@ -106,6 +106,47 @@ class InjectOutputPortMetadataField : public Transform {
   public:
     InjectOutputPortMetadataField(DpdkProgramStructure *structure) : structure(structure) {}
     const IR::Node *preorder(IR::Type_Struct *s) override;
+};
+
+class AlignHdrMetaField : public Transform {
+    P4::TypeMap* typeMap;
+    P4::ReferenceMap *refMap;
+    DpdkProgramStructure *structure;
+
+    //safe_vector<struct fieldInfo> field_name_list;
+    // safe_vector<cstring> field_name_list;
+    ordered_map<cstring, struct fieldInfo> field_name_list;
+
+  public:
+    AlignHdrMetaField(P4::TypeMap* typeMap,
+                            P4::ReferenceMap *refMap,
+                            DpdkProgramStructure* structure)
+        : typeMap(typeMap), refMap(refMap), structure(structure) {
+        CHECK_NULL(structure);
+    }
+    const IR::Node *preorder(IR::Type_StructLike *st) override;
+    const IR::Node *preorder(IR::Member *m) override;
+};
+
+class ReplaceHdrMetaField : public Transform {
+    P4::TypeMap* typeMap;
+    P4::ReferenceMap *refMap;
+    DpdkProgramStructure *structure;
+  public:
+    ReplaceHdrMetaField(P4::TypeMap* typeMap,
+                            P4::ReferenceMap *refMap,
+                            DpdkProgramStructure* structure)
+        : typeMap(typeMap), refMap(refMap), structure(structure) {
+        CHECK_NULL(structure);
+    }
+    const IR::Node* postorder(IR::Type_Struct *st) override;
+};
+
+struct fieldInfo {
+    unsigned fieldWidth;
+    fieldInfo() {
+        fieldWidth = 0;
+    }
 };
 
 // This class is helpful for StatementUnroll and IfStatementUnroll. Since dpdk

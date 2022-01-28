@@ -22,8 +22,10 @@ limitations under the License.
 #include "dpdkProgram.h"
 #include "dpdkContext.h"
 #include "frontends/p4/moveDeclarations.h"
+#include "frontends/p4/strengthReduction.h"
 #include "midend/eliminateTypedefs.h"
 #include "midend/removeComplexExpressions.h"
+#include "midend/removeLeftSlices.h"
 #include "ir/dbprint.h"
 #include "ir/ir.h"
 #include "lib/stringify.h"
@@ -52,6 +54,13 @@ void DpdkBackend::convert(const IR::ToplevelBlock *tlb) {
         new P4::ClearTypeMap(typeMap),
         new P4::TypeChecking(refMap, typeMap),
         // TBD: implement dpdk lowering passes instead of reusing bmv2's lowering pass.
+        
+        new AlignHdrMetaField(typeMap, refMap, &structure),
+        new P4::ClearTypeMap(typeMap),
+        new P4::TypeChecking(refMap, typeMap, true),
+        new P4::DoRemoveLeftSlices(typeMap),
+        new P4::ClearTypeMap(typeMap),
+        new P4::TypeChecking(refMap, typeMap, true),
         new BMV2::LowerExpressions(typeMap),
         new P4::RemoveComplexExpressions(refMap, typeMap,
                 new DPDK::ProcessControls(&structure.pipeline_controls)),
@@ -74,6 +83,7 @@ void DpdkBackend::convert(const IR::ToplevelBlock *tlb) {
         new StatementUnroll(refMap, &structure),
         new IfStatementUnroll(refMap, &structure),
         new P4::ClearTypeMap(typeMap),
+        new P4::ResolveReferences(refMap),
         new P4::TypeChecking(refMap, typeMap, true),
         new ConvertBinaryOperationTo2Params(),
         new CollectProgramStructure(refMap, typeMap, &structure),
@@ -100,6 +110,7 @@ void DpdkBackend::convert(const IR::ToplevelBlock *tlb) {
                 out->flush();
             }
         }),
+        new ReplaceHdrMetaField(typeMap, refMap, &structure),
         // convert to assembly program
         convertToDpdk,
     };

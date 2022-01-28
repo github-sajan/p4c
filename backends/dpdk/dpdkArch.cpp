@@ -213,7 +213,6 @@ const IR::Node *ConvertToDpdkArch::preorder(IR::Member *m) {
     if (!m->expr->is<IR::Member>() &&
         !m->expr->is<IR::ArrayIndex>())
         prune();
-
     if (auto p = m->expr->to<IR::PathExpression>()) {
         auto declaration = refMap->getDeclaration(p->path);
         if (auto decl = declaration->to<IR::Parameter>()) {
@@ -328,6 +327,117 @@ bool CollectMetadataHeaderInfo::preorder(const IR::Type_Struct *s) {
         }
     }
     return true;
+}
+
+const IR::Node *AlignHdrMetaField::preorder(IR::Type_StructLike *st) {
+    auto fields = new IR::IndexedVector<IR::StructField>;
+    if (st->is<IR::Type_Header>()) {
+        auto h = st->to<IR::Type_Header>();
+        unsigned size_sum_so_far = 0;
+        for (auto field : st->fields) {
+            if (auto t = (*field).type->to<IR::Type_Bits>()) {
+                auto width = t->width_bits();
+                if (t->width_bits() % 8 != 0) {
+                    size_sum_so_far += t->width_bits();
+                    fieldInfo obj;
+                    obj.fieldWidth =  width;
+                    field_name_list.emplace(field->name, obj);
+                } else {
+                    if (size_sum_so_far != 0) {
+                        ::error("8-bit Alignment for Header Structure '%1%' is not possible", st->name.name);
+                        return st;
+                    }
+                    fields->push_back(field);
+                    continue;
+                }
+                cstring modifiedName = "";
+                auto size = field_name_list.size();
+                unsigned i = 0;
+                if (size_sum_so_far <= 64) {
+                    if (size_sum_so_far && (size_sum_so_far % 8 == 0)) {
+                        for (auto s = field_name_list.begin(); s != field_name_list.end(); s++,i++) {
+                            if ((i + 1) < (size))
+                                modifiedName += s->first + "_";
+                            else
+                                modifiedName += s->first;
+                        }
+                        unsigned offset = 0;
+                        for (auto s = field_name_list.begin(); s != field_name_list.end(); s++) {
+                            hdrFieldInfo fieldObj;
+                            fieldObj.modifiedName = modifiedName;
+                            fieldObj.headerStr = st->name.name;
+                            fieldObj.modifiedWidth = size_sum_so_far;
+                            fieldObj.fieldWidth = s->second.fieldWidth;
+                            fieldObj.lsb = offset;
+                            fieldObj.msb = offset + s->second.fieldWidth - 1;
+                            fieldObj.offset = offset;
+                            structure->hdrFieldInfoList[s->first].push_back(fieldObj);
+                            offset += s->second.fieldWidth;
+                        }
+                        fields->push_back(new IR::StructField(IR::ID(modifiedName), IR::Type_Bits::get(size_sum_so_far)));
+                        size_sum_so_far = 0;
+                        modifiedName = "";
+                        field_name_list.clear();
+                    }
+                } else {
+                    ::error("8-bit Alignment for Header Structure '%1%' is not possible", st->name.name);
+                    return st;
+                }
+            }
+        }
+        if (size_sum_so_far != 0) {
+            ::error("8-bit Alignment for Header Structure '%1%' is not possible", st->name.name);
+            return st;
+        }
+        return new IR::Type_Header(IR::ID(st->name), st->annotations, *fields);
+    }
+
+    return st;
+}
+
+const IR::Node *AlignHdrMetaField::preorder(IR::Member *m) {
+    cstring hdrStrName = "";
+    auto it = structure->hdrFieldInfoList.find(m->member.name);
+    if (it != structure->hdrFieldInfoList.end()) {
+        for (auto memVec : structure->hdrFieldInfoList[m->member.name]) {
+            if ((m != nullptr) && (m->expr != nullptr) &&
+                (m->expr->type != nullptr) &&
+                (m->expr->type->is<IR::Type_StructLike>())) {
+                auto str_type = m->expr->type->to<IR::Type_StructLike>();
+                hdrStrName = str_type->name.name;
+            } else {
+                return m;
+            }
+            if (memVec.headerStr != hdrStrName)
+                continue;
+            auto mem = new IR::Member(m->expr, IR::ID(memVec.modifiedName));
+            auto sliceMem = new IR::Slice(mem->clone(), (memVec.offset + memVec.fieldWidth - 1), memVec.offset);
+            return sliceMem;
+        }
+    }
+    return m;
+}
+
+const IR::Node* ReplaceHdrMetaField::postorder(IR::Type_Struct *st) {
+    auto fields = new IR::IndexedVector<IR::StructField>;
+    if (st->is<IR::Type_Struct>()) {
+        for (auto field : st->fields) {
+            if (auto t = (*field).type->to<IR::Type_Bits>()) {
+                auto width = t->width_bits();
+                if (width % 8 != 0) {
+                    if (width < 32)
+                        width = 32;
+                    else
+                        width = 64;
+                    fields->push_back(new IR::StructField(IR::ID(field->name), IR::Type_Bits::get(width)));
+                } else {
+                    fields->push_back(field);
+                }
+            }
+        }
+        return new IR::Type_Struct(IR::ID(st->name), st->annotations, *fields);
+    }
+    return st;
 }
 
 // This function collects the match key information of a table. This is later used for
