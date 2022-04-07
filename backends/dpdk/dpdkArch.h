@@ -516,6 +516,19 @@ class PrependPDotToActionArgs : public Transform {
     const IR::Node *preorder(IR::MethodCallExpression*) override;
 };
 
+class DefActionValue : public Inspector {
+    P4::TypeMap* typeMap;
+    P4::ReferenceMap *refMap;
+    DpdkProgramStructure* structure;
+
+ public:
+    DefActionValue(P4::TypeMap* typeMap,
+                            P4::ReferenceMap *refMap,
+                            DpdkProgramStructure* structure)
+        : typeMap(typeMap), refMap(refMap), structure(structure) {}
+    void postorder(const IR::P4Table* t) override;
+};
+
 // dpdk does not support ternary operator so we need to translate ternary operator
 // to corresponding if else statement
 // Taken from frontend pass DoSimplifyExpressions in sideEffects.h

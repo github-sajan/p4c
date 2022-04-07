@@ -67,7 +67,7 @@ table tunnel_decap_ipv4_tunnel_term_table {
 		tunnel_decap_decap_outer_ipv4_0
 		NoAction
 	}
-	default_action NoAction args none 
+	default_action NoAction args none const
 	size 0x10000
 }
 
@@ -80,7 +80,7 @@ table tunnel_encap_set_tunnel_encap {
 		tunnel_encap_set_tunnel_0
 		NoAction
 	}
-	default_action NoAction args none 
+	default_action NoAction args none const
 	size 0x100
 }
 
