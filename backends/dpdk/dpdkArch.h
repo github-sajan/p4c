@@ -25,7 +25,6 @@ limitations under the License.
 #include "lib/error.h"
 #include "lib/ordered_map.h"
 #include "dpdkProgramStructure.h"
-#include "constants.h"
 
 namespace DPDK {
 
