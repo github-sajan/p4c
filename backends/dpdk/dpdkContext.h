@@ -145,7 +145,7 @@ class DpdkContextGenerator : public Inspector {
     void addMatchTables(Util::JsonArray* tablesJson);
     Util::JsonObject* initTableCommonJson(const cstring name, const struct TableAttributes & attr);
     void addKeyField(Util::JsonArray* keyJson, const cstring name, const cstring annon,
-                     const IR::KeyElement *key, int position);
+                     const IR::KeyElement *key, int position, int fieldOffset);
     Util::JsonArray* addActions(const IR::P4Table * table, const cstring ctrlName, bool isMatch);
     bool addRefTables(const cstring tbl_name, const IR::P4Table **memberTable,
                       Util::JsonObject* tableJson);

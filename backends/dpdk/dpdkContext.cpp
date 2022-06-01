@@ -119,7 +119,7 @@ void DpdkContextGenerator::CollectTablesAndSetAttributes() {
 // This functions insert a single key field in the match keys array
 void DpdkContextGenerator::addKeyField(
 Util::JsonArray* keyJson, const cstring name, const cstring nameAnnotation,
-    const IR::KeyElement *key, int position) {
+    const IR::KeyElement *key, int position, int fieldOffset) {
     auto* keyField = new Util::JsonObject();
     cstring fieldName = name.findlast('.');
     auto instanceName = name.replace(fieldName, "");
@@ -128,6 +128,7 @@ Util::JsonArray* keyJson, const cstring name, const cstring nameAnnotation,
     keyField->emplace("instance_name", instanceName);
     keyField->emplace("field_name", fieldName);
     keyField->emplace("match_type", toStr(key->matchType));
+    keyField->emplace("fieldOffset", fieldOffset);
     keyField->emplace("start_bit", 0);
     keyField->emplace("bit_width", key->expression->type->width_bits());
     keyField->emplace("bit_width_full", key->expression->type->width_bits());
@@ -410,13 +411,24 @@ void DpdkContextGenerator::addMatchTables(Util::JsonArray* tablesJson) {
             if (isMatchTable) {
                 hasActionProfileSelector = addRefTables(tbl->name, &memberTable, tableJson);
                 auto match_keys = tbl->getKey();
+                //std::cout<<"match_keys : "<<match_keys<<std::endl;
                 if (match_keys) {
                     auto* keyJson = new Util::JsonArray();
                     int position = 0;
                     for (auto matchKeyFromPrg : tableAttr.tableKeys) {
+						unsigned offset = 0;
+                        if (match_keys->keyElements.at(position)->expression->is<IR::Member>()) {
+                            auto mem = match_keys->keyElements.at(position)->expression->to<IR::Member>();
+                            if (auto st = mem->expr->type->to<IR::Type_Struct>()) {
+                                offset = st->getFieldBitOffset(mem->member.name);
+                            } else if (auto st = mem->expr->type->to<IR::Type_Header>()) {
+                                offset = st->getFieldBitOffset(mem->member.name);
+                            }
+                        }
                         addKeyField(keyJson, matchKeyFromPrg.first, matchKeyFromPrg.second,
-                                    match_keys->keyElements.at(position),position);
+                                    match_keys->keyElements.at(position), position, offset);
                         position++;
+                        
                     }
                     tableJson->emplace("match_key_fields", keyJson);
                 }

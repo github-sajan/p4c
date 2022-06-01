@@ -187,6 +187,10 @@
                         "type": "string",
                         "description": "An indication of the match type for this field"
                      },
+                     "fieldOffset": {
+                        "type": "integer",
+                        "description": "An integer indicating the offset for the field in header or metadata structure"
+                     },
                      "start_bit": {
                         "type": "integer",
                         "description": "An integer indicating the start bit (from LSB) of the field"
