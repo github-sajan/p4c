@@ -242,8 +242,6 @@ bool ValidateTableKeys::preorder(const IR::DpdkAsmProgram *p) {
             if (type->is<IR::Type_Struct>()
                 && isMetadataStruct(type->to<IR::Type_Struct>())) {
                 auto offset = metaStruct->getFieldBitOffset(keyMem->member.name);
-				std::cout<<"mem : "<<keyMem->member.name<<std::endl;
-				std::cout<<"offset : "<<offset<<std::endl;
                 if (min == -1 || min > offset)
                     min = offset;
                 if (max == -1 || max < offset) {
