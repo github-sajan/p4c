@@ -411,14 +411,13 @@ void DpdkContextGenerator::addMatchTables(Util::JsonArray* tablesJson) {
             if (isMatchTable) {
                 hasActionProfileSelector = addRefTables(tbl->name, &memberTable, tableJson);
                 auto match_keys = tbl->getKey();
-                //std::cout<<"match_keys : "<<match_keys<<std::endl;
                 if (match_keys) {
                     auto* keyJson = new Util::JsonArray();
                     int position = 0;
                     for (auto matchKeyFromPrg : tableAttr.tableKeys) {
-						unsigned offset = 0;
-                        if (match_keys->keyElements.at(position)->expression->is<IR::Member>()) {
-                            auto mem = match_keys->keyElements.at(position)->expression->to<IR::Member>();
+                        unsigned offset = 0;
+                        if (auto mem =
+                              match_keys->keyElements.at(position)->expression->to<IR::Member>()) {
                             if (auto st = mem->expr->type->to<IR::Type_Struct>()) {
                                 offset = st->getFieldBitOffset(mem->member.name);
                             } else if (auto st = mem->expr->type->to<IR::Type_Header>()) {
@@ -428,7 +427,6 @@ void DpdkContextGenerator::addMatchTables(Util::JsonArray* tablesJson) {
                         addKeyField(keyJson, matchKeyFromPrg.first, matchKeyFromPrg.second,
                                     match_keys->keyElements.at(position), position, offset);
                         position++;
-                        
                     }
                     tableJson->emplace("match_key_fields", keyJson);
                 }
