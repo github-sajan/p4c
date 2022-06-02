@@ -264,5 +264,36 @@ bool ValidateTableKeys::preorder(const IR::DpdkAsmProgram *p) {
     return false;
 }
 
+bool UpdateTableKeyOffsetVal::preorder(const IR::DpdkAsmProgram *p) {
+    const IR::DpdkStructType *metaStruct = nullptr;
+    for (auto st : p->structType) {
+        if (isMetadataStruct(st)) {
+            metaStruct = st;
+            break;
+        }
+    }
+    for (auto tbl : p->tables) {
+        auto keys = tbl->match_keys;
+        if (!keys || keys->keyElements.size() == 0) {
+            return false;
+        }
+        for (auto key : keys->keyElements) {
+            BUG_CHECK(key->expression->is<IR::Member>(), "Table keys must be a structure field. "
+                                                          "%1% is not a structure field", key);
+            auto keyMem = key->expression->to<IR::Member>();
+            auto type = keyMem->expr->type;
+			unsigned offset = 0;
+            if (type->is<IR::Type_Struct>() &&
+                isMetadataStruct(type->to<IR::Type_Struct>())) {
+                offset = metaStruct->getFieldBitOffset(keyMem->member.name);
+            } else if (auto st = type->to<IR::Type_Header>()) {
+				offset = st->getFieldBitOffset(keyMem->member.name);
+			}
+			structure->keyOffsetMap.emplace(keyMem->member.name, offset);
+        }
+    }
+    return false;
+}
+
 size_t ShortenTokenLength::count = 0;
 }  // namespace DPDK

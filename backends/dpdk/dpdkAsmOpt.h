@@ -29,6 +29,7 @@ limitations under the License.
 #include "ir/ir.h"
 #include "lib/gmputil.h"
 #include "lib/json.h"
+#include "dpdkProgramStructure.h"
 
 #define DPDK_TABLE_MAX_KEY_SIZE 64*8
 
@@ -304,6 +305,17 @@ class DpdkAsmOptimization : public PassRepeated {
         passes.push_back(r);
         passes.push_back(new ThreadJumps);
     }
+};
+
+// Instructions can only appear in actions and apply block of .spec file.
+// All these individual passes work on the actions and apply block of .spec file.
+class UpdateTableKeyOffsetVal : public Inspector {
+ DpdkProgramStructure *structure;
+ public:
+    UpdateTableKeyOffsetVal(DpdkProgramStructure *structure) : structure(structure) {
+        CHECK_NULL(structure);
+    }
+    bool preorder(const IR::DpdkAsmProgram *p) override;
 };
 
 }  // namespace DPDK

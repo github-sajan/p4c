@@ -415,15 +415,12 @@ void DpdkContextGenerator::addMatchTables(Util::JsonArray* tablesJson) {
                     auto* keyJson = new Util::JsonArray();
                     int position = 0;
                     for (auto matchKeyFromPrg : tableAttr.tableKeys) {
+                        auto mem =
+                              match_keys->keyElements.at(position)->expression->to<IR::Member>();
                         unsigned offset = 0;
-                        if (auto mem =
-                              match_keys->keyElements.at(position)->expression->to<IR::Member>()) {
-                            if (auto st = mem->expr->type->to<IR::Type_Struct>()) {
-                                offset = st->getFieldBitOffset(mem->member.name);
-                            } else if (auto st = mem->expr->type->to<IR::Type_Header>()) {
-                                offset = st->getFieldBitOffset(mem->member.name);
-                            }
-                        }
+                        if (structure->keyOffsetMap.find(mem->member.name)
+                            != structure->keyOffsetMap.end())
+                            offset = structure->keyOffsetMap[mem->member.name];
                         addKeyField(keyJson, matchKeyFromPrg.first, matchKeyFromPrg.second,
                                     match_keys->keyElements.at(position), position, offset);
                         position++;
