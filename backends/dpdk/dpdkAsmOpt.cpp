@@ -269,10 +269,11 @@ bool UpdateTableKeyOffsetVal::preorder(const IR::DpdkAsmProgram *p) {
     for (auto st : p->structType) {
         if (isMetadataStruct(st)) {
             metaStruct = st;
+			structure->mdStruct = st;
             break;
         }
     }
-    for (auto tbl : p->tables) {
+    /*for (auto tbl : p->tables) {
         auto keys = tbl->match_keys;
         if (!keys || keys->keyElements.size() == 0) {
             return false;
@@ -282,16 +283,16 @@ bool UpdateTableKeyOffsetVal::preorder(const IR::DpdkAsmProgram *p) {
                                                           "%1% is not a structure field", key);
             auto keyMem = key->expression->to<IR::Member>();
             auto type = keyMem->expr->type;
-			unsigned offset = 0;
+            unsigned offset = 0;
             if (type->is<IR::Type_Struct>() &&
                 isMetadataStruct(type->to<IR::Type_Struct>())) {
                 offset = metaStruct->getFieldBitOffset(keyMem->member.name);
             } else if (auto st = type->to<IR::Type_Header>()) {
-				offset = st->getFieldBitOffset(keyMem->member.name);
-			}
-			structure->keyOffsetMap.emplace(keyMem->member.name, offset);
+                offset = st->getFieldBitOffset(keyMem->member.name);
+            }
+            structure->keyOffsetMap.emplace(keyMem->member.name, offset);
         }
-    }
+    }*/
     return false;
 }
 

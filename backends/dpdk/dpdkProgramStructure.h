@@ -57,6 +57,7 @@ struct DpdkProgramStructure {
     ordered_map<cstring, std::vector<struct hdrFieldInfo>> hdrFieldInfoList;
     ordered_map<cstring, IR::ParameterList*> defActionParamList;
     ordered_map<cstring, unsigned> keyOffsetMap;
+	const IR::DpdkStructType *mdStruct = nullptr;
 
     void push_variable(const IR::DpdkDeclaration * d) {
         variables.push_back(d); }
