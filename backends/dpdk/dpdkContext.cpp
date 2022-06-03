@@ -458,7 +458,6 @@ void DpdkContextGenerator::addMatchTables(Util::JsonArray* tablesJson) {
 unsigned DpdkContextGenerator::getOffsetVal(const IR::Expression* exp) {
     unsigned offset = 0;
     if (auto mem = exp->to<IR::Member>()) {
-        //
         if (mem->expr->type->is<IR::Type_Struct>())
             offset = structure->mdStruct->getFieldBitOffset(mem->member.name);
         else if (auto st = mem->expr->type->to<IR::Type_Header>())

@@ -264,11 +264,11 @@ bool ValidateTableKeys::preorder(const IR::DpdkAsmProgram *p) {
     return false;
 }
 
+// Store the user metadata structure in 'structure->mdStruct' which will be
+// later used for offset value calculation for metadata field
 bool CollectUserMetadataStructure::preorder(const IR::DpdkAsmProgram *p) {
-    const IR::DpdkStructType *metaStruct = nullptr;
     for (auto st : p->structType) {
         if (isMetadataStruct(st)) {
-            metaStruct = st;
             structure->mdStruct = st;
             break;
         }
