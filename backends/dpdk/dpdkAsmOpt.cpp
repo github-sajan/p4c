@@ -273,7 +273,7 @@ bool CollectUserMetadataStructure::preorder(const IR::DpdkAsmProgram *p) {
             break;
         }
     }
-    return true;
+    return false;
 }
 
 size_t ShortenTokenLength::count = 0;
