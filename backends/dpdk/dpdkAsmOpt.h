@@ -307,12 +307,12 @@ class DpdkAsmOptimization : public PassRepeated {
     }
 };
 
-// Instructions can only appear in actions and apply block of .spec file.
-// All these individual passes work on the actions and apply block of .spec file.
-class UpdateTableKeyOffsetVal : public Inspector {
- DpdkProgramStructure *structure;
+// This pass collects the user metadata structure which is later
+// used for offset calculation of keyfield while context file generation
+class CollectUserMetadataStructure : public Inspector {
+    DpdkProgramStructure *structure;
  public:
-    UpdateTableKeyOffsetVal(DpdkProgramStructure *structure) : structure(structure) {
+    explicit CollectUserMetadataStructure(DpdkProgramStructure *structure) : structure(structure) {
         CHECK_NULL(structure);
     }
     bool preorder(const IR::DpdkAsmProgram *p) override;

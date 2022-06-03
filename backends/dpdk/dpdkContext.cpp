@@ -415,15 +415,8 @@ void DpdkContextGenerator::addMatchTables(Util::JsonArray* tablesJson) {
                     auto* keyJson = new Util::JsonArray();
                     int position = 0;
                     for (auto matchKeyFromPrg : tableAttr.tableKeys) {
-                        unsigned offset = 0;
-                        if (auto mem =
-								match_keys->keyElements.at(position)->expression->to<IR::Member>()) {
-								if (auto st = mem->expr->type->to<IR::Type_Struct>()) {
-									offset = structure->mdStruct->getFieldBitOffset(mem->member.name);
-								} else if (auto st = mem->expr->type->to<IR::Type_Header>()) {
-									offset = st->getFieldBitOffset(mem->member.name);
-								}
-							}
+                        auto offset =
+                              getOffsetVal(match_keys->keyElements.at(position)->expression);
                         addKeyField(keyJson, matchKeyFromPrg.first, matchKeyFromPrg.second,
                                     match_keys->keyElements.at(position), position, offset);
                         position++;
@@ -460,6 +453,18 @@ void DpdkContextGenerator::addMatchTables(Util::JsonArray* tablesJson) {
         }
       tablesJson->append(tableJson);
     }
+}
+
+unsigned DpdkContextGenerator::getOffsetVal(const IR::Expression* exp) {
+    unsigned offset = 0;
+    if (auto mem = exp->to<IR::Member>()) {
+        //
+        if (mem->expr->type->is<IR::Type_Struct>())
+            offset = structure->mdStruct->getFieldBitOffset(mem->member.name);
+        else if (auto st = mem->expr->type->to<IR::Type_Header>())
+            offset = st->getFieldBitOffset(mem->member.name);
+    }
+    return offset;
 }
 
 const Util::JsonObject* DpdkContextGenerator::genContextJsonObject() {

@@ -46,8 +46,6 @@ void DpdkBackend::convert(const IR::ToplevelBlock *tlb) {
 
     std::set<const IR::P4Table*> invokedInKey;
     auto convertToDpdk = new ConvertToDpdkProgram(refMap, typeMap, &structure, options);
-    //auto* json = new Util::JsonObject();
-    //auto genContextJson = new DpdkContextGenerator(refMap, typeMap, &structure, options, json);
     auto genContextJson = new DpdkContextGenerator(refMap, typeMap, &structure, options);
 
     PassManager simplify = {
@@ -132,7 +130,7 @@ void DpdkBackend::convert(const IR::ToplevelBlock *tlb) {
         new CollectUsedMetadataField(used_fields),
         new RemoveUnusedMetadataFields(used_fields),
         new ValidateTableKeys(),
-        new UpdateTableKeyOffsetVal(&structure),
+        new CollectUserMetadataStructure(&structure),
         new ShortenTokenLength(),
         new VisitFunctor([this, genContextJson] {
             // Serialize context json object into user specified file
