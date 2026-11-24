@@ -1,4 +1,5 @@
-<map id="P4::InlineDriver" name="P4::InlineDriver">
-<area shape="rect" id="node2" href="$class_transform.html" title="Transform" alt="" coords="21,79,102,104"/>
-<area shape="rect" id="node3" href="$class_visitor.html" title="Visitor" alt="" coords="33,5,91,31"/>
+<map id="P4::InlineDriver&lt; InlineList, InlineWorkList &gt;" name="P4::InlineDriver&lt; InlineList, InlineWorkList &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,81,178,126"/>
+<area shape="rect" id="Node000002" href="$class_p4_1_1_visitor.html" title=" " alt="" coords="48,5,135,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="93,47,94,81,89,79,90,51"/>
 </map>
